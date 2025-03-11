@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String   // Hashed password
+  displayName  String?
+
+  createdAt    DateTime @default(now())
+
+  // Relations
+  brews        BrewHistory[]
+  coffeeBeans  CoffeeInventory[]
+}
+
+model BrewHistory {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  brewSize     String   // small, medium, large
+  balance      String   // sweet, even, bright
+  strength     String   // light, medium, strong
+
+  coffeeAmount Int      // Grams of coffee
+  waterAmount  Int      // Grams of water
+  pours        Json     // Stores pour breakdown in JSON format
+
+  tasteRating  Int?     // Optional: 1-5 scale
+  coffeeBeanId String?  
+  coffeeBean   CoffeeInventory? @relation(fields: [coffeeBeanId], references: [id], onDelete: SetNull)
+
+  grindSize    String?  // Optional grind size
+  notes        String?  // Optional user notes
+
+  createdAt    DateTime @default(now())
+}
+
+model CoffeeInventory {
+  id             String  @id @default(uuid())
+  userId         String  
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  roaster        String
+  process        String
+  origin         String
+  roastDate      DateTime
+  totalWeight    Int
+  opened         Boolean
+  lastBrewDate   DateTime?
+  gramsRemaining Int
+
+  brews          BrewHistory[]
+}
+
+
+
+
