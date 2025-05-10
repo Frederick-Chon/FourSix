@@ -8,11 +8,13 @@ import calculateBrew, {
   Strength,
 } from '@/utils/calculate-brew';
 
+type ScreenState = 'options' | 'timer' | 'complete';
+
 const Brew = () => {
+  const [screen, setScreen] = useState<ScreenState>('options');
   const [brewSize, setBrewSize] = useState<BrewSize>(BrewSize.MEDIUM);
   const [balance, setBalance] = useState<Balance>(Balance.EVEN);
   const [strength, setStrength] = useState<Strength>(Strength.MEDIUM);
-  const [startBrewing, setStartBrewing] = useState(false);
 
   const brewDetails = useMemo(
     () => calculateBrew(brewSize, balance, strength),
@@ -20,33 +22,47 @@ const Brew = () => {
   );
 
   return (
-    <div className="p-4">
-      <BrewOptions
-        brewSize={brewSize}
-        setBrewSize={setBrewSize}
-        balance={balance}
-        setBalance={setBalance}
-        strength={strength}
-        setStrength={setStrength}
-      />
-      <RecipeInfo
-        coffeeAmount={brewDetails.coffeeAmount}
-        waterAmount={brewDetails.waterAmount}
-        pours={brewDetails.pours}
-      />
-      {!startBrewing && (
-        <button
-          onClick={() => setStartBrewing(true)}
-          className="mt-6 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-        >
-          Start Brew
-        </button>
+    <div className="p-4 space-y-6">
+      {screen === 'options' && (
+        <>
+          <BrewOptions
+            brewSize={brewSize}
+            setBrewSize={setBrewSize}
+            balance={balance}
+            setBalance={setBalance}
+            strength={strength}
+            setStrength={setStrength}
+          />
+
+          <RecipeInfo
+            coffeeAmount={brewDetails.coffeeAmount}
+            waterAmount={brewDetails.waterAmount}
+            pours={brewDetails.pours}
+          />
+
+          <button
+            onClick={() => setScreen('timer')}
+            className="w-full py-3 rounded bg-green-600 text-white font-semibold"
+          >
+            Start Brew
+          </button>
+        </>
       )}
-      {startBrewing && (
+
+      {screen === 'timer' && (
         <Timer
           pours={brewDetails.pours}
-          onComplete={() => alert('Brew Complete!')}
+          onComplete={() => setScreen('complete')}
         />
+      )}
+
+      {screen === 'complete' && (
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-green-400">Brew Complete!</h2>
+          <p className="text-gray-300 mt-2">
+            Enjoy your coffee. Summary view coming soon.
+          </p>
+        </div>
       )}
     </div>
   );
