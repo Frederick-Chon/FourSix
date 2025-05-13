@@ -7,6 +7,8 @@ import calculateBrew, {
   Balance,
   Strength,
 } from '@/utils/calculate-brew';
+import { saveBrew } from '@/utils/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 type ScreenState = 'options' | 'timer' | 'complete';
 
@@ -20,6 +22,22 @@ const Brew = () => {
     () => calculateBrew(brewSize, balance, strength),
     [brewSize, balance, strength]
   );
+
+  const handleCompleteBrew = () => {
+    const newBrew = {
+      id: uuidv4(),
+      date: new Date().toISOString(),
+      size: brewSize,
+      balance,
+      strength,
+      coffeeGrams: brewDetails.coffeeAmount,
+      waterGrams: brewDetails.waterAmount,
+      notes: '',
+    };
+
+    saveBrew(newBrew);
+    setScreen('complete');
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -50,10 +68,7 @@ const Brew = () => {
       )}
 
       {screen === 'timer' && (
-        <Timer
-          pours={brewDetails.pours}
-          onComplete={() => setScreen('complete')}
-        />
+        <Timer pours={brewDetails.pours} onComplete={handleCompleteBrew} />
       )}
 
       {screen === 'complete' && (
