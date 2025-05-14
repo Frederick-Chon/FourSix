@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import BrewOptions from '../brew-options/brew-options';
 import RecipeInfo from '../recipe-info/recipe-info';
 import Timer from '../timer/timer';
@@ -7,7 +7,7 @@ import calculateBrew, {
   Balance,
   Strength,
 } from '@/utils/calculate-brew';
-import { saveBrew } from '@/utils/storage';
+import { saveBrew, getStoredCoffees, updateCoffee } from '@/utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 type ScreenState = 'options' | 'timer' | 'complete';
@@ -17,6 +17,8 @@ const Brew = () => {
   const [brewSize, setBrewSize] = useState<BrewSize>(BrewSize.MEDIUM);
   const [balance, setBalance] = useState<Balance>(Balance.EVEN);
   const [strength, setStrength] = useState<Strength>(Strength.MEDIUM);
+  const [selectedBeanId, setSelectedBeanId] = useState<string>('');
+  const brewCompletedRef = useRef(false);
 
   const brewDetails = useMemo(
     () => calculateBrew(brewSize, balance, strength),
@@ -24,6 +26,9 @@ const Brew = () => {
   );
 
   const handleCompleteBrew = () => {
+    if (brewCompletedRef.current) return;
+    brewCompletedRef.current = true;
+
     const newBrew = {
       id: uuidv4(),
       date: new Date().toISOString(),
@@ -36,6 +41,28 @@ const Brew = () => {
     };
 
     saveBrew(newBrew);
+
+    // Subtract grams from selected bean
+    if (selectedBeanId) {
+      const beans = getStoredCoffees();
+      const bean = beans.find((b) => b.id === selectedBeanId);
+
+      if (bean) {
+        const updatedBean = {
+          ...bean,
+          gramsRemaining: Math.max(
+            bean.gramsRemaining - brewDetails.coffeeAmount,
+            0
+          ),
+        };
+
+        updateCoffee(updatedBean);
+        console.log(
+          `Subtracted ${brewDetails.coffeeAmount}g from ${bean.name}. Remaining: ${updatedBean.gramsRemaining}g`
+        );
+      }
+    }
+
     setScreen('complete');
   };
 
@@ -50,6 +77,8 @@ const Brew = () => {
             setBalance={setBalance}
             strength={strength}
             setStrength={setStrength}
+            selectedBeanId={selectedBeanId}
+            setSelectedBeanId={setSelectedBeanId}
           />
 
           <RecipeInfo

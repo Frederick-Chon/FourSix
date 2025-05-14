@@ -1,11 +1,12 @@
 import { ChevronsUpDown } from 'lucide-react';
 
-type DropdownProps<T> = {
+type DropdownProps<T extends string> = {
   label: string;
   icon: React.ElementType;
   value: T;
   options: T[];
   onChange: (value: T) => void;
+  displayMap?: Record<string, string>;
 };
 
 const Dropdown = <T extends string>({
@@ -14,6 +15,7 @@ const Dropdown = <T extends string>({
   value,
   options,
   onChange,
+  displayMap,
 }: DropdownProps<T>) => {
   return (
     <div className="flex items-center bg-gray-800 p-4 rounded-lg">
@@ -33,7 +35,7 @@ const Dropdown = <T extends string>({
             >
               {options.map((option) => (
                 <option key={option} value={option} className="text-black">
-                  {option}
+                  {displayMap?.[option] ?? option}
                 </option>
               ))}
             </select>
