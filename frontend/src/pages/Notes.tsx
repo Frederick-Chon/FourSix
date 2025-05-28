@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  getStoredBrews,
-  deleteBrew,
-  updateBrew,
-  getStoredCoffees,
-} from '@/utils/storage';
+import { fetchBrews, deleteBrew, updateBrew } from '@/utils/api';
+import { getStoredCoffees } from '@/utils/storage';
 import type { Brew } from '@/types/brew';
 import type { CoffeeBean } from '@/types/coffee';
 
@@ -14,13 +10,26 @@ const Notes = () => {
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   useEffect(() => {
-    setBrews(getStoredBrews());
+    const loadBrews = async () => {
+      try {
+        const result = await fetchBrews();
+        setBrews(result.data); // expects { success: true, data: Brew[] }
+      } catch (err) {
+        console.error('Failed to fetch brews:', err);
+      }
+    };
+
+    loadBrews();
     setBeans(getStoredCoffees());
   }, []);
 
-  const handleDelete = (id: string) => {
-    deleteBrew(id);
-    setBrews((prev) => prev.filter((b) => b.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteBrew(id);
+      setBrews((prev) => prev.filter((b) => b.id !== id));
+    } catch (err) {
+      console.error('Failed to delete brew:', err);
+    }
   };
 
   const handleNoteChange = (id: string, value: string) => {
@@ -29,14 +38,18 @@ const Notes = () => {
     );
   };
 
-  const handleSaveNote = (brew: Brew) => {
-    updateBrew(brew);
-    setLastSavedId(brew.id);
-    setTimeout(() => setLastSavedId(null), 2000);
+  const handleSaveNote = async (brew: Brew) => {
+    try {
+      await updateBrew(brew.id, { notes: brew.notes || '' });
+      setLastSavedId(brew.id);
+      setTimeout(() => setLastSavedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to save note:', err);
+    }
   };
 
   const getBeanName = (brew: Brew) => {
-    const bean = beans.find((b) => b.id === brew.beanId);
+    const bean = beans.find((b) => b.id === brew.coffeeBeanId);
     return bean ? `${bean.name} – ${bean.roaster}` : 'Unknown Bean';
   };
 
@@ -55,10 +68,10 @@ const Notes = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-semibold">
-                    {new Date(brew.date).toLocaleString()}
+                    {new Date(brew.createdAt).toLocaleString()}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {brew.size}, {brew.balance}, {brew.strength}
+                    {brew.brewSize}, {brew.balance}, {brew.strength}
                   </p>
                   <p className="text-sm text-yellow-600">{getBeanName(brew)}</p>
                 </div>
@@ -71,7 +84,7 @@ const Notes = () => {
               </div>
 
               <p>
-                Coffee: {brew.coffeeGrams}g | Water: {brew.waterGrams}g
+                Coffee: {brew.coffeeAmount}g | Water: {brew.waterAmount}g
               </p>
 
               <textarea

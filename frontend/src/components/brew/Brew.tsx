@@ -7,8 +7,9 @@ import calculateBrew, {
   Balance,
   Strength,
 } from '@/utils/calculate-brew';
-import { saveBrew, getStoredCoffees, updateCoffee } from '@/utils/storage';
+import { getStoredCoffees, updateCoffee } from '@/utils/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { createBrew } from '@/utils/api';
 
 type ScreenState = 'options' | 'timer' | 'complete';
 
@@ -25,46 +26,29 @@ const Brew = () => {
     [brewSize, balance, strength]
   );
 
-  const handleCompleteBrew = () => {
+  const handleCompleteBrew = async () => {
     if (brewCompletedRef.current) return;
     brewCompletedRef.current = true;
 
     const newBrew = {
-      id: uuidv4(),
-      date: new Date().toISOString(),
-      size: brewSize,
+      userId: 'user-1', // TODO: update this once auth is setup!
+      brewSize,
       balance,
       strength,
-      coffeeGrams: brewDetails.coffeeAmount,
-      waterGrams: brewDetails.waterAmount,
+      coffeeAmount: brewDetails.coffeeAmount,
+      waterAmount: brewDetails.waterAmount,
+      pours: brewDetails.pours,
+      coffeeBeanId: selectedBeanId || undefined,
       notes: '',
-      beanId: selectedBeanId,
     };
 
-    saveBrew(newBrew);
-
-    // Subtract grams from selected bean
-    if (selectedBeanId) {
-      const beans = getStoredCoffees();
-      const bean = beans.find((b) => b.id === selectedBeanId);
-
-      if (bean) {
-        const updatedBean = {
-          ...bean,
-          gramsRemaining: Math.max(
-            bean.gramsRemaining - brewDetails.coffeeAmount,
-            0
-          ),
-        };
-
-        updateCoffee(updatedBean);
-        console.log(
-          `Subtracted ${brewDetails.coffeeAmount}g from ${bean.name}. Remaining: ${updatedBean.gramsRemaining}g`
-        );
-      }
+    try {
+      await createBrew(newBrew);
+      setScreen('complete');
+    } catch (err) {
+      console.error('Failed to create brew:', err);
+      alert('Something went wrong saving your brew');
     }
-
-    setScreen('complete');
   };
 
   return (

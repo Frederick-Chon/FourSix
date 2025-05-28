@@ -1,13 +1,17 @@
-import { BrewSize, Balance, Strength } from '@/utils/calculate-brew';
+import { BrewSize, Balance, Strength, Pour } from '@/utils/calculate-brew';
 
 export type Brew = {
   id: string;
-  date: string;
-  size: BrewSize;
+  userId: string;
+  brewSize: BrewSize;
   balance: Balance;
   strength: Strength;
-  coffeeGrams: number;
-  waterGrams: number;
+  coffeeAmount: number;
+  waterAmount: number;
+  pours: Pour[]; // ✅ precise type, no more any
+  coffeeBeanId?: string;
+  grindSize?: string;
   notes?: string;
-  beanId: string;
+  tasteRating?: number;
+  createdAt: string;
 };

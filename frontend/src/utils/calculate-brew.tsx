@@ -11,7 +11,7 @@
       * Strong = split remaining 60% into 4 pours (45g each pour) 
 */
 
-type Pour = { pourNumber: number; amount: number };
+export type Pour = { pourNumber: number; amount: number };
 
 export enum BrewSize {
   SMALL = 'Small',
