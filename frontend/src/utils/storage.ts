@@ -22,6 +22,14 @@ export const deleteBrew = (id: string) => {
   localStorage.setItem(BREW_KEY, JSON.stringify(updated));
 };
 
+export const updateBrew = (updated: Brew) => {
+  const existing = getStoredBrews();
+  const newHistory = existing.map((brew) =>
+    brew.id === updated.id ? updated : brew
+  );
+  localStorage.setItem(BREW_KEY, JSON.stringify(newHistory));
+};
+
 // Coffee Inventory
 const COFFEE_KEY = 'coffeeInventory';
 

@@ -38,6 +38,7 @@ const Brew = () => {
       coffeeGrams: brewDetails.coffeeAmount,
       waterGrams: brewDetails.waterAmount,
       notes: '',
+      beanId: selectedBeanId,
     };
 
     saveBrew(newBrew);

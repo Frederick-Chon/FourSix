@@ -9,4 +9,5 @@ export type Brew = {
   coffeeGrams: number;
   waterGrams: number;
   notes?: string;
+  beanId: string;
 };
