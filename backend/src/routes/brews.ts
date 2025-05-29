@@ -46,6 +46,19 @@ brewsRouter.post("/", async (req: Request, res: Response) => {
   }
 
   try {
+    console.log('Payload for brew:', {
+      userId,
+      brewSize,
+      balance,
+      strength,
+      coffeeAmount,
+      waterAmount,
+      pours,
+      coffeeBeanId,
+      notes,
+      grindSize,
+      tasteRating,
+    });
     const newBrew = await prisma.brewHistory.create({
       data: {
         userId,
@@ -55,7 +68,7 @@ brewsRouter.post("/", async (req: Request, res: Response) => {
         coffeeAmount,
         waterAmount,
         pours,
-        coffeeBeanId,
+        ...(coffeeBeanId && { coffeeBeanId }),
         notes,
         grindSize,
         tasteRating,

@@ -38,7 +38,11 @@ const Brew = () => {
       coffeeAmount: brewDetails.coffeeAmount,
       waterAmount: brewDetails.waterAmount,
       pours: brewDetails.pours,
-      coffeeBeanId: selectedBeanId || undefined,
+      // coffeeBeanId:
+      //   selectedBeanId && selectedBeanId !== '__add_new'
+      //     ? selectedBeanId
+      //     : undefined,
+      coffeeBeanId: 'dfe72db5-76c7-4ebc-93cb-e74352d98c56',
       notes: '',
     };
 

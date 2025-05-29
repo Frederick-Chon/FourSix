@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchBrews, deleteBrew, updateBrew } from '@/utils/api';
-import { getStoredCoffees } from '@/utils/storage';
+import { fetchBrews, deleteBrew, updateBrew, fetchCoffees } from '@/utils/api';
 import type { Brew } from '@/types/brew';
 import type { CoffeeBean } from '@/types/coffee';
 
@@ -10,17 +9,19 @@ const Notes = () => {
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadBrews = async () => {
+    const loadData = async () => {
       try {
-        const result = await fetchBrews();
-        setBrews(result.data); // expects { success: true, data: Brew[] }
+        const brewRes = await fetchBrews();
+        setBrews(brewRes.data);
+
+        const beanRes = await fetchCoffees();
+        setBeans(beanRes);
       } catch (err) {
-        console.error('Failed to fetch brews:', err);
+        console.error('Failed to load data:', err);
       }
     };
 
-    loadBrews();
-    setBeans(getStoredCoffees());
+    loadData();
   }, []);
 
   const handleDelete = async (id: string) => {

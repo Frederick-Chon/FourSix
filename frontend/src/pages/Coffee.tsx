@@ -1,60 +1,74 @@
 import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import type { CoffeeBean } from '@/types/coffee';
 import {
-  getStoredCoffees,
+  fetchCoffees,
   addCoffee,
   updateCoffee,
   deleteCoffee,
-} from '@/utils/storage';
+} from '@/utils/api';
 
 const Coffee = () => {
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
   const [name, setName] = useState('');
   const [roaster, setRoaster] = useState('');
   const [origin, setOrigin] = useState('');
+  const [process, setProcess] = useState('');
   const [roastDate, setRoastDate] = useState('');
   const [weight, setWeight] = useState(250);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setBeans(getStoredCoffees());
+    const loadBeans = async () => {
+      try {
+        const result = await fetchCoffees();
+        setBeans(result);
+      } catch (err) {
+        console.error('Failed to fetch beans:', err);
+      }
+    };
+
+    loadBeans();
   }, []);
 
-  const handleAddOrUpdateCoffee = () => {
-    const existingBean = beans.find((b) => b.id === editingId);
-
-    const bean: CoffeeBean = {
-      id: editingId ?? uuidv4(),
+  const handleAddOrUpdateCoffee = async () => {
+    const beanData = {
+      userId: 'user-1',
       name,
       roaster,
       origin,
+      process,
       roastDate,
-      weight,
-      gramsRemaining: weight,
-      isFinished: existingBean?.isFinished ?? false,
-      addedDate: existingBean?.addedDate ?? new Date().toISOString(),
+      totalWeight: weight,
     };
 
-    if (editingId) {
-      updateCoffee(bean);
-      setBeans((prev) => prev.map((b) => (b.id === editingId ? bean : b)));
-      setEditingId(null);
-    } else {
-      addCoffee(bean);
-      setBeans((prev) => [bean, ...prev]);
-    }
+    try {
+      if (editingId) {
+        const updated = await updateCoffee(editingId, beanData);
+        setBeans((prev) => prev.map((b) => (b.id === editingId ? updated : b)));
+        setEditingId(null);
+      } else {
+        const newBean = await addCoffee(beanData);
+        setBeans((prev) => [newBean, ...prev]);
+      }
 
-    setName('');
-    setRoaster('');
-    setOrigin('');
-    setRoastDate('');
-    setWeight(250);
+      setName('');
+      setRoaster('');
+      setOrigin('');
+      setProcess('');
+      setRoastDate('');
+      setWeight(250);
+    } catch (err) {
+      console.error('Failed to save coffee bean:', err);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteCoffee(id);
-    setBeans((prev) => prev.filter((bean) => bean.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCoffee(id);
+      setBeans((prev) => prev.filter((bean) => bean.id !== id));
+    } catch (err) {
+      console.error('Failed to delete coffee bean:', err);
+    }
   };
 
   const formatDateDiff = (dateStr: string, label: string) => {
@@ -65,13 +79,11 @@ const Coffee = () => {
       : `${label} ${Math.floor(days / 7)} weeks ago`;
   };
 
-  const openBeans = beans.filter((b) => b.gramsRemaining > 0 && !b.isFinished);
+  const openBeans = beans.filter((b) => b.gramsRemaining > 0 && !b.opened);
   const newBeans = beans.filter(
-    (b) => b.gramsRemaining === b.weight && !b.isFinished
+    (b) => b.gramsRemaining === b.totalWeight && !b.opened
   );
-  const finishedBeans = beans.filter(
-    (b) => b.isFinished || b.gramsRemaining <= 0
-  );
+  const finishedBeans = beans.filter((b) => b.gramsRemaining <= 0 || b.opened);
 
   const BeanCard = ({ bean }: { bean: CoffeeBean }) => (
     <li className="p-4 rounded-xl border bg-zinc-800 text-white flex justify-between items-start">
@@ -80,12 +92,10 @@ const Coffee = () => {
         <p className="text-sm text-zinc-400">
           {bean.roaster} · {bean.origin}
         </p>
+        <p className="text-sm text-zinc-400 italic">{bean.process}</p>
         <p className="text-sm mt-1">
           {formatDateDiff(bean.roastDate, 'Roasted')}
         </p>
-        {bean.addedDate && (
-          <p className="text-sm">{formatDateDiff(bean.addedDate, 'Added')}</p>
-        )}
         <p className="mt-2 font-medium">{bean.gramsRemaining}g remaining</p>
       </div>
       <div className="flex flex-col gap-1 text-sm">
@@ -95,8 +105,9 @@ const Coffee = () => {
             setName(bean.name);
             setRoaster(bean.roaster);
             setOrigin(bean.origin);
+            setProcess(bean.process || '');
             setRoastDate(bean.roastDate);
-            setWeight(bean.weight);
+            setWeight(bean.totalWeight);
           }}
           className="text-yellow-400 hover:underline"
         >
@@ -137,6 +148,13 @@ const Coffee = () => {
           placeholder="Origin"
           value={origin}
           onChange={(e) => setOrigin(e.target.value)}
+          className="w-full p-2 rounded bg-zinc-800 text-white"
+        />
+        <input
+          type="text"
+          placeholder="Process (e.g. Washed, Natural)"
+          value={process}
+          onChange={(e) => setProcess(e.target.value)}
           className="w-full p-2 rounded bg-zinc-800 text-white"
         />
         <input

@@ -14,45 +14,45 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  password     String   // Hashed password
-  displayName  String?
+  id          String  @id @default(uuid())
+  email       String  @unique
+  password    String // Hashed password
+  displayName String?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   // Relations
-  brews        BrewHistory[]
-  coffeeBeans  CoffeeInventory[]
+  brews       BrewHistory[]
+  coffeeBeans CoffeeInventory[]
 }
 
 model BrewHistory {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  brewSize     String   // small, medium, large
-  balance      String   // sweet, even, bright
-  strength     String   // light, medium, strong
+  brewSize String
+  balance  String
+  strength String
 
-  coffeeAmount Int      // Grams of coffee
-  waterAmount  Int      // Grams of water
-  pours        Json     // Stores pour breakdown in JSON format
+  coffeeAmount Int
+  waterAmount  Int
+  pours        Json
 
-  tasteRating  Int?     // Optional: 1-5 scale
-  coffeeBeanId String?  
-  coffeeBean   CoffeeInventory? @relation(fields: [coffeeBeanId], references: [id], onDelete: SetNull)
+  tasteRating  Int?
+  coffeeBeanId String?
+  coffeeBean   CoffeeInventory? @relation("CoffeeBrewRelation", fields: [coffeeBeanId], references: [id], onDelete: SetNull)
 
-  grindSize    String?  // Optional grind size
-  notes        String?  // Optional user notes
+  grindSize String?
+  notes     String?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model CoffeeInventory {
-  id             String  @id @default(uuid())
-  userId         String  
-  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   name           String
   roaster        String
@@ -64,9 +64,5 @@ model CoffeeInventory {
   lastBrewDate   DateTime?
   gramsRemaining Int
 
-  brews          BrewHistory[]
+  brews BrewHistory[] @relation("CoffeeBrewRelation")
 }
-
-
-
-

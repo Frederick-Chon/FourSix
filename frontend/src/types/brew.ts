@@ -8,7 +8,7 @@ export type Brew = {
   strength: Strength;
   coffeeAmount: number;
   waterAmount: number;
-  pours: Pour[]; // ✅ precise type, no more any
+  pours: Pour[];
   coffeeBeanId?: string;
   grindSize?: string;
   notes?: string;

@@ -1,12 +1,13 @@
 export type CoffeeBean = {
   id: string;
+  userId: string;
   name: string;
   roaster: string;
   origin: string;
-  roastDate: string
-  weight: number;
+  process?: string;
+  roastDate: string;
+  totalWeight: number;
   gramsRemaining: number;
-  isFinished: boolean;
-  notes?: string;
-  addedDate: string;
+  opened: boolean;
+  addedDate?: string;
 };
