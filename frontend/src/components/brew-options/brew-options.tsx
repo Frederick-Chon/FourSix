@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { Beaker, Scale, Gauge, Coffee } from 'lucide-react';
 import { BrewSize, Balance, Strength } from '@/utils/calculate-brew';
 import Dropdown from '../dropdown/Dropdown';
-import { getStoredCoffees, addCoffee } from '@/utils/storage';
 import { CoffeeBean } from '@/types/coffee';
-import { v4 as uuidv4 } from 'uuid';
+import { fetchCoffees, addCoffee as addCoffeeAPI } from '@/utils/api';
 
 type BrewOptionsProps = {
   brewSize: BrewSize;
@@ -30,7 +29,6 @@ const BrewOptions = ({
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
   const [addingNew, setAddingNew] = useState(false);
 
-  // Inline form state
   const [name, setName] = useState('');
   const [roaster, setRoaster] = useState('');
   const [origin, setOrigin] = useState('');
@@ -38,37 +36,45 @@ const BrewOptions = ({
   const [weight, setWeight] = useState(250);
 
   useEffect(() => {
-    setBeans(getStoredCoffees());
+    const loadBeans = async () => {
+      try {
+        const result = await fetchCoffees();
+        setBeans(result);
+      } catch (err) {
+        console.error('Failed to fetch beans:', err);
+      }
+    };
+    loadBeans();
   }, []);
 
   useEffect(() => {
     setAddingNew(selectedBeanId === '__add_new');
   }, [selectedBeanId]);
 
-  const handleAddNewBean = () => {
-    const newBean: CoffeeBean = {
-      id: uuidv4(),
-      name,
-      roaster,
-      origin,
-      roastDate,
-      weight,
-      gramsRemaining: weight,
-      isFinished: false,
-      addedDate: new Date().toISOString(),
-    };
+  const handleAddNewBean = async () => {
+    try {
+      const newBean = await addCoffeeAPI({
+        userId: 'user-1',
+        name,
+        roaster,
+        origin,
+        process: 'Unknown',
+        roastDate,
+        totalWeight: weight,
+      });
 
-    addCoffee(newBean);
-    const updatedBeans = [newBean, ...beans];
-    setBeans(updatedBeans);
-    setSelectedBeanId(newBean.id);
-    setAddingNew(false);
+      setBeans((prev) => [newBean, ...prev]);
+      setSelectedBeanId(newBean.id);
+      setAddingNew(false);
 
-    setName('');
-    setRoaster('');
-    setOrigin('');
-    setRoastDate('');
-    setWeight(250);
+      setName('');
+      setRoaster('');
+      setOrigin('');
+      setRoastDate('');
+      setWeight(250);
+    } catch (err) {
+      console.error('Failed to add new bean:', err);
+    }
   };
 
   const coffeeOptions = [

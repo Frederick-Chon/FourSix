@@ -10,4 +10,5 @@ export type CoffeeBean = {
   gramsRemaining: number;
   opened: boolean;
   addedDate?: string;
+  lastBrewDate?: string;
 };

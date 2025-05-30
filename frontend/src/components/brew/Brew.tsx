@@ -7,9 +7,7 @@ import calculateBrew, {
   Balance,
   Strength,
 } from '@/utils/calculate-brew';
-import { getStoredCoffees, updateCoffee } from '@/utils/storage';
-import { v4 as uuidv4 } from 'uuid';
-import { createBrew } from '@/utils/api';
+import { createBrew, updateCoffee, fetchCoffees } from '@/utils/api';
 
 type ScreenState = 'options' | 'timer' | 'complete';
 
@@ -38,19 +36,37 @@ const Brew = () => {
       coffeeAmount: brewDetails.coffeeAmount,
       waterAmount: brewDetails.waterAmount,
       pours: brewDetails.pours,
-      // coffeeBeanId:
-      //   selectedBeanId && selectedBeanId !== '__add_new'
-      //     ? selectedBeanId
-      //     : undefined,
-      coffeeBeanId: 'dfe72db5-76c7-4ebc-93cb-e74352d98c56',
+      coffeeBeanId:
+        selectedBeanId && selectedBeanId !== '__add_new'
+          ? selectedBeanId
+          : undefined,
       notes: '',
     };
 
     try {
       await createBrew(newBrew);
+
+      // update coffee inventory if a bean was selected
+      if (selectedBeanId && selectedBeanId !== '__add_new') {
+        const beans = await fetchCoffees();
+        const bean = beans.find((b) => b.id === selectedBeanId);
+        if (bean) {
+          console.log('Updating coffee bean', bean);
+          const updatedGrams = Math.max(
+            bean.gramsRemaining - brewDetails.coffeeAmount,
+            0
+          );
+
+          await updateCoffee(bean.id, {
+            gramsRemaining: updatedGrams,
+            lastBrewDate: new Date().toISOString(),
+          });
+        }
+      }
+
       setScreen('complete');
     } catch (err) {
-      console.error('Failed to create brew:', err);
+      console.error('Failed to complete brew:', err);
       alert('Something went wrong saving your brew');
     }
   };
